@@ -1,3 +1,25 @@
+/* Toolbar styles */
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  background: #f0f4ff;
+  padding: 10px 15px;
+  border-radius: 5px;
+  box-shadow: 0 1px 3px rgba(26,35,126,0.05);
+}
+.toolbar label {
+  font-weight: bold;
+  color: #1a237e;
+}
+.toolbar select, .toolbar input[type="text"] {
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid #bbb;
+  font-size: 15px;
+}
 * {
   box-sizing: border-box;
   margin: 0;

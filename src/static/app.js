@@ -3,6 +3,103 @@ document.addEventListener("DOMContentLoaded", () => {
   const activitySelect = document.getElementById("activity");
   const signupForm = document.getElementById("signup-form");
   const messageDiv = document.getElementById("message");
+  const categoryFilter = document.getElementById("category-filter");
+  const sortFilter = document.getElementById("sort-filter");
+  const searchBox = document.getElementById("search-box");
+
+  // Map activity names to categories (for demo, can be improved)
+  const activityCategories = {
+    "Chess Club": "Academic",
+    "Programming Class": "Academic",
+    "Math Club": "Academic",
+    "Debate Team": "Academic",
+    "Soccer Team": "Sports",
+    "Basketball Team": "Sports",
+    "Gym Class": "Sports",
+    "Art Club": "Arts",
+    "Drama Club": "Arts"
+  };
+
+  let allActivities = {};
+
+  // Function to render activities with filters
+  function renderActivities() {
+    const selectedCategory = categoryFilter ? categoryFilter.value : "";
+    const sortBy = sortFilter ? sortFilter.value : "name";
+    const searchTerm = searchBox ? searchBox.value.trim().toLowerCase() : "";
+
+    let filtered = Object.entries(allActivities).filter(([name, details]) => {
+      if (selectedCategory && activityCategories[name] !== selectedCategory) return false;
+      if (searchTerm && !name.toLowerCase().includes(searchTerm) && !details.description.toLowerCase().includes(searchTerm)) return false;
+      return true;
+    });
+
+    filtered.sort((a, b) => {
+      if (sortBy === "name") {
+        return a[0].localeCompare(b[0]);
+      } else if (sortBy === "schedule") {
+        return a[1].schedule.localeCompare(b[1].schedule);
+      }
+      return 0;
+    });
+
+    activitiesList.innerHTML = "";
+    activitySelect.innerHTML = '<option value="">-- Select an activity --</option>';
+
+    filtered.forEach(([name, details]) => {
+      const activityCard = document.createElement("div");
+      activityCard.className = "activity-card";
+      const spotsLeft = details.max_participants - details.participants.length;
+      const participantsHTML =
+        details.participants.length > 0
+          ? `<div class="participants-section">
+              <h5>Participants:</h5>
+              <ul class="participants-list">
+                ${details.participants
+                  .map(
+                    (email) =>
+                      `<li><span class="participant-email">${email}</span><button class="delete-btn" data-activity="${name}" data-email="${email}">❌</button></li>`
+                  )
+                  .join("")}
+              </ul>
+            </div>`
+          : `<p><em>No participants yet</em></p>`;
+      activityCard.innerHTML = `
+        <h4>${name}</h4>
+        <p>${details.description}</p>
+        <p><strong>Schedule:</strong> ${details.schedule}</p>
+        <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
+        <div class="participants-container">
+          ${participantsHTML}
+        </div>
+      `;
+      activitiesList.appendChild(activityCard);
+      const option = document.createElement("option");
+      option.value = name;
+      option.textContent = name;
+      activitySelect.appendChild(option);
+    });
+
+    document.querySelectorAll(".delete-btn").forEach((button) => {
+      button.addEventListener("click", handleUnregister);
+    });
+  }
+
+  async function fetchActivities() {
+    try {
+      const response = await fetch("/activities");
+      allActivities = await response.json();
+      renderActivities();
+    } catch (error) {
+      activitiesList.innerHTML =
+        "<p>Failed to load activities. Please try again later.</p>";
+      console.error("Error fetching activities:", error);
+    }
+  }
+
+  if (categoryFilter) categoryFilter.addEventListener("change", renderActivities);
+  if (sortFilter) sortFilter.addEventListener("change", renderActivities);
+  if (searchBox) searchBox.addEventListener("input", renderActivities);
 
   // Function to fetch activities from API
   async function fetchActivities() {
